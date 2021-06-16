@@ -1,24 +1,7 @@
 class Grid
   DEPTH = 2
-  BREAK_STR = "-" * (DEPTH ** 2 * 2 + DEPTH)
 
   attr_reader :candidates
-
-  def print_grid
-    res = (DEPTH ** 2).times.map { "" }
-    candidates.each_with_index do |row_cands, row_index|
-      row_cands.each_with_index do |col_cands, col_index|
-        col_cands.map do |square_cands|
-          square_cands.map(&:ractor).map(&:take).find_index(true)
-        end.to_a.each_slice(DEPTH).with_index do |slice, slice_index|
-          res[DEPTH * row_index + slice_index] <<
-            (col_index == 0 ? "" : " | ") + slice.join(" ")
-        end
-      end
-    end
-    (1...DEPTH).each { |index| res.insert(DEPTH * index, BREAK_STR)}
-    puts res.join("\n")
-  end
 
   def initialize
     # rows
@@ -73,6 +56,8 @@ class Grid
         end
       end
     end
+
+    puts groups.size
   end
 
   # All 0 indexed (including candidate value)

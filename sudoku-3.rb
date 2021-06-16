@@ -1,5 +1,3 @@
-SIZE = 2
-
 class Candidate
   attr_accessor :ractor
 
@@ -12,20 +10,21 @@ class Candidate
 end
 
 class Group
-  attr_reader :candidate_ractors, :candidates
+  attr_reader :candidate_ractors
 
-  def initialize(candidates)
-    @candidates = candidates
-    @candidate_ractors = candidates.map { _1[:ractor] }
+  def initialize(candidate_ractors)
+    @candidate_ractors = candidate_ractors
     Ractor.new candidate_ractors do |candidate_ractors|
       value = false
-      (SIZE ** 2 - 1).times do
+      8.times do
         r, value = Ractor.select(*candidate_ractors)
         candidate_ractors.delete r
+        puts "deleted #{r} #{value}"
         break if value
       end
 
-      candidate_ractors.each { _1.send !value }
+      puts "22"
+      candidate_ractors.each { puts _1; _1.send !value }
       Ractor.yield true
     end
   end
@@ -35,11 +34,11 @@ class Board
   attr_accessor :board, :groups
 
   def initialize
-    @board = SIZE.times.map do |row|
-      SIZE.times.map do |col|
-        SIZE.times.map do |cell_row|
-          SIZE.times.map do |cell_col|
-            (SIZE ** 2).times.map do |value|
+    @board = 3.times.map do |row|
+      3.times.map do |col|
+        3.times.map do |cell_row|
+          3.times.map do |cell_col|
+            9.times.map do |value|
               {
                 row: row,
                 col: col,
@@ -57,7 +56,7 @@ class Board
 
   def make_groups
     rows = board.group_by do |candidate|
-      (candidate[:row] * SIZE + candidate[:cell_row])
+      (candidate[:row] * 3 + candidate[:cell_row])
     end.values.map do |row|
       row.group_by do |candidate|
         candidate[:value]
@@ -65,7 +64,7 @@ class Board
     end.map(&:values).flatten(1)
 
     cols = board.group_by do |candidate|
-      (candidate[:col] * SIZE + candidate[:cell_col])
+      (candidate[:col] * 3 + candidate[:cell_col])
     end.values.map do |row|
       row.group_by do |candidate|
         candidate[:value]
@@ -73,7 +72,7 @@ class Board
     end.map(&:values).flatten(1)
 
     cells = board.group_by do |candidate|
-      (candidate[:row] * SIZE + candidate[:col])
+      (candidate[:row] * 3 + candidate[:col])
     end.values.map do |row|
       row.group_by do |candidate|
         candidate[:value]
@@ -82,22 +81,19 @@ class Board
 
     # Only one not by value
     squares = board.group_by do |candidate|
-      (candidate[:row] * SIZE + candidate[:col])
+      (candidate[:row] * 3 + candidate[:col])
     end.values.map do |row|
       row.group_by do |candidate|
-      (candidate[:cell_row] * SIZE + candidate[:cell_col])
+      (candidate[:cell_row] * 3 + candidate[:cell_col])
       end
     end.map(&:values).flatten(1)
 
     @groups =  (rows + cols + cells + squares).map do |group|
-#    @groups =  (cols).map do |group|
-#      Group.new(group.map { _1[:ractor] })
-      Group.new(group)
+      Group.new(group.map { _1[:ractor] })
     end
   end
 
   def send(row, col, cell_row, cell_col, value)
-    value = 0 if value == SIZE ** 2
     find(row, col, cell_row, cell_col, value)[:ractor].send true
   end
 
@@ -110,33 +106,47 @@ class Board
       square[:value] == value
     end.first
   end
-
-  def print_solution
-    puts board.select { _1[:ractor].take }.
-      sort_by { [_1[:row], _1[:cell_row], _1[:col], _1[:cell_col]] }.
-      map { _1[:value] }.
-      each_slice(4).to_a.
-      map { _1.join(" ").gsub("0", (SIZE ** 2).to_s) }.join("\n")
-  end
 end
 
 board = Board.new
-board.send(0,1,0,1,3)
-board.send(0,1,1,1,2)
-board.send(1,0,0,0,3)
-board.send(1,0,1,0,4)
-puts Ractor.count
-board.make_groups
-puts Ractor.count
-board.print_solution
+board.send(0,0,0,1,7)
+board.send(0,0,1,1,6)
+board.send(0,0,2,0,2)
+board.send(0,1,0,1,2)
+board.send(0,1,2,0,8)
+board.send(0,2,0,1,4)
+board.send(0,2,0,2,6)
+board.send(0,2,1,0,8)
+board.send(0,2,1,1,0)
+board.send(0,2,2,0,7)
+board.send(0,2,2,1,1)
+board.send(0,2,2,2,5)
+board.send(1,0,0,1,8)
+board.send(1,0,0,2,4)
+board.send(1,0,1,0,7)
+board.send(1,0,1,1,1)
+board.send(1,1,0,1,0)
+board.send(1,1,0,2,7)
+board.send(1,1,2,0,1)
+board.send(1,1,2,1,3)
+board.send(1,2,1,1,5)
+board.send(1,2,1,2,0)
+board.send(1,2,2,0,4)
+board.send(1,2,2,1,8)
+board.send(2,0,0,0,6)
+board.send(2,0,0,1,0)
+board.send(2,0,0,2,7)
+board.send(2,0,1,1,5)
+board.send(2,0,1,2,8)
+board.send(2,0,2,0,4)
+board.send(2,0,2,1,3)
+board.send(2,1,0,2,2)
+board.send(2,1,2,1,8)
+board.send(2,2,0,2,8)
+board.send(2,2,1,1,6)
+board.send(2,2,1,2,7)
 
-
-b2 = Board.new
-b2.send(1,0,0,0,4)
-b2.send(1,0,1,1,2)
-b2.send(0,1,1,0,1)
-b2.send(1,1,1,1,3)
-b2.make_groups
-puts Ractor.count
-b2.print_solution
 ###
+#
+board.send(0,0,0,0,8)
+
